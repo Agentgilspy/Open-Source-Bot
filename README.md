@@ -1,2 +1,3 @@
 # Open-Source-Bot
- Open Source Discord Bot written in Javascript using discord.js
+
+Template for coding a discord.js(v13) bot

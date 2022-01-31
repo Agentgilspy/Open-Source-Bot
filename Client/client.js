@@ -1,60 +1,48 @@
-const { Client, Message } = require('discord.js')
+const { Client, Intents } = require('discord.js')
 const { readdirSync } = require('fs')
 
+const intents = new Intents(['GUILDS', 'GUILD_MESSAGES', 'GUILD_MEMBERS'])
 class Bot extends Client {
-	constructor() {
-		super()
-
+	constructor(Token, Prefix) {
+		super({ intents: intents })
+		this.login(Token)
 		this.commands = new Map()
+
+		this.prefix = Prefix
+
+		this.slashcommands = []
 	}
 
-	run(token, path) {
-		const categories = readdirSync(path, '/Commands')
+	start() {
+		// Event Handler
 
-		for (category of categories) {
-			const commands = readdirSync(
-				path,
-				'/Commands',
-				`/${category}`
-			).filter((name) =>
-				name.endsWith('.js').map((command) => (command = command.split('.')[0]))
-			)
-
-			for (const command of commands) {
-				const file = require(`../Commands/${category}/${command}`)
-				this.commands.set(command, file)
-			}
-		}
-
-		const events = readdirSync(path, '/Events')
-			.filter((name) => name.endsWith('.js'))
-			.map((event) => (event = event.split('.')[0]))
+		const events = readdirSync(`${process.cwd()}/Events`).map(
+			(el) => el.split('.')[0]
+		)
 
 		for (const event of events) {
 			const file = require(`../Events/${event}`)
+
 			this.on(event, file.execute.bind(null, this))
 		}
 
-		this.login(token)
-	}
+		// Command handler
 
-	/**
-	 *
-	 * @param {Message} message
-	 */
-	getid(message) {
-		const args = message.content.split(/ +/g)
-		const member = message.mentions.members.first()
+		const categories = readdirSync(`${process.cwd()}/Commands`)
 
-		let id
+		for (const category of categories) {
+			const commands = readdirSync(
+				`${process.cwd()}/Commands/${category}`
+			).map((el) => el.split('.')[0])
 
-		if (member) id = member.id
+			for (const command of commands) {
+				const file = require(`../Commands/${category}/${command}`)
 
-		if (!member) [, id] = args
+				if (file.data) this.slashcommands.push(file.data)
 
-		if (Number.isNaN(id)) id = undefined
-
-		return id
+				this.commands.set(command.toLowerCase(), file)
+			}
+		}
 	}
 }
 
