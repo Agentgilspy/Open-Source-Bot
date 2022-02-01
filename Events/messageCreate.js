@@ -7,7 +7,7 @@ const { Message } = require('discord.js')
  */
 module.exports.execute = async (bot, message) => {
 	if (!message.guild) return
-
+	if(message.author.bot)return
 	if (!message.content.startsWith(bot.prefix)) return
 
 	const args = message.content.slice(bot.prefix.length).split(/ +/g)
